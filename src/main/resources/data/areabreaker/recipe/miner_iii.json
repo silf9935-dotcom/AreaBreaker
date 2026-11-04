@@ -31,8 +31,8 @@
       "minecraft:stored_enchantments": {
         "levels": {
           "minecraft:efficiency": 5,
-          "minecraft:fortune": 5,
-          "minecraft:unbreaking": 5,
+          "minecraft:fortune": 3,
+          "minecraft:unbreaking": 3,
           "minecraft:mending": 1
         }
       }
