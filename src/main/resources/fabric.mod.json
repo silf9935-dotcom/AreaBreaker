@@ -3,7 +3,7 @@
   "id": "areabreaker",
   "version": "${version}",
   "name": "AreaBreaker",
-  "description": "Mine a selected rectangular area in single-player worlds.",
+  "description": "Расширенная добыча блоков: области, жилы, настройки и книги шахтёра.",
   "environment": "client",
   "entrypoints": {
     "client": [
