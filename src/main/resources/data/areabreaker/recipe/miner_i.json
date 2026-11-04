@@ -7,15 +7,20 @@
     " i "
   ],
   "key": {
-    "i": { "item": "minecraft:iron_ingot" },
-    "s": { "item": "minecraft:stone" },
-    "l": { "item": "minecraft:lapis_lazuli" }
+    "i": {
+      "item": "minecraft:iron_ingot"
+    },
+    "s": {
+      "item": "minecraft:stone"
+    },
+    "l": {
+      "item": "minecraft:lapis_lazuli"
+    }
   },
   "result": {
-    "id": "minecraft:enchanted_book",
+    "id": "areabreaker:miner_i",
     "count": 1,
     "components": {
-      "minecraft:custom_name": { "text": "Шахтёр I", "italic": false },
       "minecraft:stored_enchantments": {
         "levels": {
           "minecraft:efficiency": 2,
