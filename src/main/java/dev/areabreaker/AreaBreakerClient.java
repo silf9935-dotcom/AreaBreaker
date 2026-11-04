@@ -72,8 +72,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
         server.execute(() -> {
             ServerPlayerEntity serverPlayer = server.getPlayerManager().getPlayer(playerId);
             ServerWorld serverWorld = server.getWorld(dimension);
-            if (serverPlayer == null || serverWorld == null
-                    || serverPlayer.getWorld() != serverWorld) return;
+            if (serverPlayer == null || serverWorld == null) return;
 
             for (BlockPos pos : positions) {
                 if (serverPlayer.isRemoved() || serverWorld.getBlockState(pos).isAir()) continue;
