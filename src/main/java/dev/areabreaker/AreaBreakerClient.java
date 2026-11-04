@@ -7,6 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -34,7 +35,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
     public void onInitializeClient() {
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.areabreaker.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V,
-                "category.areabreaker"));
+                KeyBinding.Category.create(Identifier.of("areabreaker", "main"))));
         ClientTickEvents.END_CLIENT_TICK.register(AreaBreakerClient::tick);
     }
 
