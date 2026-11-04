@@ -31,13 +31,20 @@ public abstract class ServerPlayerInteractionManagerMixin {
     @Shadow protected ServerWorld world;
 
     @Unique private boolean areabreaker$breakingArea;
+    @Unique private Block areabreaker$centerBlock;
+
+    @Inject(method = "tryBreakBlock", at = @At("HEAD"))
+    private void areabreaker$captureOriginalBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        if (!areabreaker$breakingArea) areabreaker$centerBlock = world.getBlockState(pos).getBlock();
+    }
 
     @Inject(method = "tryBreakBlock", at = @At("RETURN"))
     private void areabreaker$afterBlockBroken(BlockPos center, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue() || areabreaker$breakingArea || player.isRemoved()) return;
 
         int size = AreaBreakerSettings.getAreaSize();
-        if (size <= 1) return;
+        AreaBreakerSettings.Mode mode = AreaBreakerSettings.getMode();
+        if (mode == AreaBreakerSettings.Mode.AREA && size <= 1) return;
 
         HitResult result = player.raycast(6.0, 1.0F, false);
         Direction side = result instanceof BlockHitResult hit && result.getType() == HitResult.Type.BLOCK
@@ -45,8 +52,8 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
         areabreaker$breakingArea = true;
         try {
-            if (AreaBreakerSettings.getMode() == AreaBreakerSettings.Mode.VEIN) {
-                areabreaker$breakVein(center);
+            if (mode == AreaBreakerSettings.Mode.VEIN) {
+                areabreaker$breakVein(center, areabreaker$centerBlock);
             } else {
                 areabreaker$breakShape(center, side, size);
             }
@@ -57,8 +64,8 @@ public abstract class ServerPlayerInteractionManagerMixin {
     }
 
     @Unique
-    private void areabreaker$breakVein(BlockPos center) {
-        Block targetBlock = world.getBlockState(center).getBlock();
+    private void areabreaker$breakVein(BlockPos center, Block targetBlock) {
+        if (targetBlock == null) return;
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
         queue.add(center);
