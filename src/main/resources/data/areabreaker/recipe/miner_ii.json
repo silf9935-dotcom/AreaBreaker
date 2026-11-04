@@ -1,29 +1,18 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "pattern": [
     "g i",
     "sbc",
     "cIi"
   ],
   "key": {
-    "g": {
-      "item": "minecraft:gold_ingot"
-    },
-    "i": {
-      "item": "minecraft:iron_ingot"
-    },
-    "s": {
-      "item": "minecraft:stone_pickaxe"
-    },
-    "b": {
-      "item": "minecraft:book"
-    },
-    "c": {
-      "item": "minecraft:copper_pickaxe"
-    },
-    "I": {
-      "item": "minecraft:iron_pickaxe"
-    }
+    "g": "minecraft:gold_ingot",
+    "i": "minecraft:iron_ingot",
+    "s": "minecraft:stone_pickaxe",
+    "b": "minecraft:book",
+    "c": "minecraft:copper_pickaxe",
+    "I": "minecraft:iron_pickaxe"
   },
   "result": {
     "id": "minecraft:enchanted_book",
