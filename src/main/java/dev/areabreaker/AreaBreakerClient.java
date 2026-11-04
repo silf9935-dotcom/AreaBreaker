@@ -3,6 +3,7 @@ package dev.areabreaker;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -30,6 +31,21 @@ public final class AreaBreakerClient implements ClientModInitializer {
         modeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.areabreaker.mode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, category));
         smeltKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.areabreaker.smelt", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, category));
         addFilterKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.areabreaker.filter_add", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, category));
+
+        HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player == null || client.world == null || !AreaBreakerSettings.isEnabled()) return;
+            if (client.crosshairTarget instanceof BlockHitResult hit && client.crosshairTarget.getType() == HitResult.Type.BLOCK) {
+                String mode = AreaBreakerSettings.getMode() == AreaBreakerSettings.Mode.VEIN ? "Жила" : "Область";
+                String size = AreaBreakerSettings.getMode() == AreaBreakerSettings.Mode.VEIN
+                        ? "лимит " + AreaBreakerSettings.getVeinLimit()
+                        : AreaBreakerSettings.getAreaSize() + "×" + AreaBreakerSettings.getAreaSize()
+                        + (AreaBreakerSettings.getShape() == AreaBreakerSettings.Shape.TUNNEL
+                        ? "×" + AreaBreakerSettings.getTunnelDepth() : "");
+                String line = "AreaBreaker • " + mode + " • " + size + " • Ур. " + AreaBreakerSettings.getMiningLevel();
+                drawContext.drawTextWithShadow(client.textRenderer, Text.literal(line), 8, 8, 0xFFB7D7B5);
+            }
+        });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (menuKey.wasPressed()) if (client.currentScreen == null) client.setScreen(new AreaBreakerScreen());
@@ -62,7 +78,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
         }
         String id = Registries.BLOCK.getId(client.world.getBlockState(hit.getBlockPos()).getBlock()).toString();
         boolean added = AreaBreakerSettings.addFilterBlock(id);
-        notify(client, added ? "Добавлен в список: " + id : "Уже в списке: " + id);
+        notify(client, added ? "Добавлен в список: " + id : "Удалён из списка: " + id);
     }
 
     public static int getAreaSize() { return AreaBreakerSettings.getAreaSize(); }
