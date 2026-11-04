@@ -15,6 +15,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        AreaBreakerItems.initialize();
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.areabreaker.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V,
                 KeyBinding.Category.create(Identifier.of("areabreaker", "main"))));
