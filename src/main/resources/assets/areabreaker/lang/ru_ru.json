@@ -3,5 +3,9 @@
   "key.areabreaker.toggle": "Включить/выключить AreaBreaker",
   "key.areabreaker.mode": "Переключить режим добычи",
   "key.areabreaker.smelt": "Включить/выключить автоплавку",
-  "key.areabreaker.filter_add": "Добавить блок в фильтр"
+  "key.areabreaker.filter_add": "Добавить/убрать блок из фильтра",
+  "key.areabreaker.upgrades": "Открыть дерево улучшений",
+  "key.areabreaker.hud": "Включить/выключить HUD",
+  "key.areabreaker.shape": "Переключить форму добычи",
+  "key.areabreaker.safe_mode": "Включить/выключить защиту блоков"
 }
