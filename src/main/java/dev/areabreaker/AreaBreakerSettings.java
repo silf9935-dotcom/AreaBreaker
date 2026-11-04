@@ -27,7 +27,10 @@ public final class AreaBreakerSettings {
         Properties properties = new Properties();
         try (InputStream input = Files.newInputStream(CONFIG)) {
             properties.load(input);
-            setAreaSize(Integer.parseInt(properties.getProperty("areaSize", "3")));
+            int savedSize = Integer.parseInt(properties.getProperty("areaSize", "3"));
+            if (savedSize == 1 || savedSize == 2 || savedSize == 3 || savedSize == 4 || savedSize == 5 || savedSize == 10) {
+                areaSize = savedSize;
+            }
             mode = Mode.valueOf(properties.getProperty("mode", "AREA"));
             shape = Shape.valueOf(properties.getProperty("shape", "SQUARE"));
             durabilityProtection = Boolean.parseBoolean(properties.getProperty("durabilityProtection", "true"));
