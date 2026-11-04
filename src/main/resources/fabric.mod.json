@@ -6,12 +6,17 @@
   "description": "Mine a selected rectangular area in single-player worlds.",
   "environment": "client",
   "entrypoints": {
-    "client": ["dev.areabreaker.AreaBreakerClient"]
+    "client": [
+      "dev.areabreaker.AreaBreakerClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.18.0",
     "minecraft": "~1.21.11",
     "java": ">=21",
     "fabric-api": "*"
-  }
+  },
+  "mixins": [
+    "areabreaker.mixins.json"
+  ]
 }
