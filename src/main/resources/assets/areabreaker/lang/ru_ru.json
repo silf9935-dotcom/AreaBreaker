@@ -1,6 +1,4 @@
 {
-  "itemGroup.areabreaker.main": "AreaBreaker",
-  "item.areabreaker.miner_i": "Книга «Шахтёр I»",
-  "item.areabreaker.miner_ii": "Книга «Шахтёр II»",
-  "item.areabreaker.miner_iii": "Книга «Шахтёр III»"
+  "itemGroup.areabreaker.main": "AreaBreaker — Шахтёр",
+  "key.areabreaker.menu": "Открыть меню AreaBreaker"
 }
