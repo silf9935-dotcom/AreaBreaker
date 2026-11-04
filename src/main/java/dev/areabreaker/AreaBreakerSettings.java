@@ -130,6 +130,8 @@ public final class AreaBreakerSettings {
     public static long getMiningXp() { return miningXp; }
     public static int getMiningLevel() { return (int)Math.min(100, 1 + miningXp / 250); }
     public static long getXpToNextLevel() { return 250 - miningXp % 250; }
+    public static int getVeinLimit() { return Math.min(64, 16 + getMiningLevel() * 8); }
+    public static int getTunnelDepth() { return Math.min(6, 3 + (getMiningLevel() - 1) / 3); }
     public static int getFilterBlockCount() { return filterBlocks.size(); }
     public static void saveNow() { save(); }
 }
