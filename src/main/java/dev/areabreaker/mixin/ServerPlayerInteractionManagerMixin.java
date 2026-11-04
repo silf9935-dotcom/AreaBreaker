@@ -41,9 +41,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
     @Inject(method = "tryBreakBlock", at = @At("RETURN"))
     private void areabreaker$afterBlockBroken(BlockPos center, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue() || areabreakingInvalid()) return;
+        if (!cir.getReturnValue() || areabreakingInvalid() || areabreaker$breakingArea) return;
         AreaBreakerSettings.recordMined(areabreaker$centerBlock);
-        if (areabreaker$breakingArea || !AreaBreakerSettings.isEnabled() || player.isRemoved()) return;
+        if (!AreaBreakerSettings.isEnabled() || player.isRemoved()) return;
 
         int size = AreaBreakerSettings.getAreaSize();
         AreaBreakerSettings.Mode mode = AreaBreakerSettings.getMode();
@@ -52,6 +52,10 @@ public abstract class ServerPlayerInteractionManagerMixin {
         HitResult result = player.raycast(6.0, 1.0F, false);
         Direction side = result instanceof BlockHitResult hit && result.getType() == HitResult.Type.BLOCK
                 ? hit.getSide() : player.getHorizontalFacing().getOpposite();
+        player.sendMessage(net.minecraft.text.Text.literal("AreaBreaker • " + (mode == AreaBreakerSettings.Mode.VEIN
+                ? "жила до " + AreaBreakerSettings.getVeinLimit() + " блоков"
+                : size + "×" + size + (AreaBreakerSettings.getShape() == AreaBreakerSettings.Shape.TUNNEL
+                ? "×" + AreaBreakerSettings.getTunnelDepth() : ""))), true);
 
         areabreaker$breakingArea = true;
         try {
@@ -77,7 +81,8 @@ public abstract class ServerPlayerInteractionManagerMixin {
         queue.add(center);
         visited.add(center);
         int broken = 0;
-        while (!queue.isEmpty() && broken < 64) {
+        int veinLimit = AreaBreakerSettings.getVeinLimit();
+        while (!queue.isEmpty() && broken < veinLimit) {
             BlockPos current = queue.removeFirst();
             for (Direction direction : Direction.values()) {
                 BlockPos next = current.offset(direction);
@@ -88,7 +93,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
                     broken++;
                     AreaBreakerSettings.recordMined(targetBlock);
                 }
-                if (broken >= 64) break;
+                if (broken >= veinLimit) break;
                 queue.addLast(next);
             }
         }
@@ -99,7 +104,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
         int low = -(size / 2);
         Direction facing = player.getHorizontalFacing();
         Direction widthDirection = facing.rotateYClockwise();
-        int depth = AreaBreakerSettings.getShape() == AreaBreakerSettings.Shape.TUNNEL ? 3 : 1;
+        int depth = AreaBreakerSettings.getShape() == AreaBreakerSettings.Shape.TUNNEL ? AreaBreakerSettings.getTunnelDepth() : 1;
         for (int d = 0; d < depth; d++) {
             for (int a = 0; a < size; a++) {
                 for (int b = 0; b < size; b++) {
