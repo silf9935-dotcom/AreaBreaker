@@ -1,32 +1,26 @@
 package dev.areabreaker;
 
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.minecraft.item.EnchantedBookItem;
-import net.minecraft.item.Item;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public final class AreaBreakerItems {
-    public static final Item MINER_I = register("miner_i");
-    public static final Item MINER_II = register("miner_ii");
-    public static final Item MINER_III = register("miner_iii");
-
     public static final ItemGroup ITEM_GROUP = Registry.register(
             Registries.ITEM_GROUP,
             Identifier.of("areabreaker", "main"),
             FabricItemGroup.builder()
-                    .icon(() -> new ItemStack(MINER_I))
+                    .icon(() -> book("Книга «Шахтёр I»"))
                     .displayName(Text.literal("AreaBreaker"))
                     .entries((context, entries) -> {
-                        entries.add(new ItemStack(MINER_I));
-                        entries.add(new ItemStack(MINER_II));
-                        entries.add(new ItemStack(MINER_III));
+                        entries.add(book("Книга «Шахтёр I»"));
+                        entries.add(book("Книга «Шахтёр II»"));
+                        entries.add(book("Книга «Шахтёр III»"));
                     })
                     .build()
     );
@@ -34,13 +28,12 @@ public final class AreaBreakerItems {
     private AreaBreakerItems() {}
 
     public static void initialize() {
-        // Loading this class registers the mod books and creative tab.
+        // Loading this class registers the mod creative tab.
     }
 
-    private static Item register(String path) {
-        Identifier id = Identifier.of("areabreaker", path);
-        RegistryKey<Item> key = RegistryKey.of(RegistryKeys.ITEM, id);
-        return Registry.register(Registries.ITEM, id,
-                new EnchantedBookItem(new Item.Settings().registryKey(key)));
+    private static ItemStack book(String name) {
+        ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
+        stack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name));
+        return stack;
     }
 }
