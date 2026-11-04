@@ -6,15 +6,15 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,7 +27,9 @@ public final class AreaBreakerClient implements ClientModInitializer {
     private static final Deque<BlockPos> queue = new ArrayDeque<>();
     private static BlockPos activePos;
     private static Direction activeSide = Direction.UP;
-    private static int activeTicks;
+    private static float breakingProgress;
+    private static int waitForServerTicks;
+    private static boolean blockStarted;
     private static boolean wasAttackDown;
     private static boolean sessionStarted;
 
@@ -43,8 +45,8 @@ public final class AreaBreakerClient implements ClientModInitializer {
         while (menuKey.wasPressed()) {
             if (client.currentScreen == null) client.setScreen(new AreaBreakerScreen());
         }
-        if (client.player == null || client.world == null || client.interactionManager == null
-                || !client.isInSingleplayer()) {
+        if (client.player == null || client.world == null || client.getNetworkHandler() == null
+                || client.interactionManager == null || !client.isInSingleplayer()) {
             clearQueue();
             wasAttackDown = false;
             return;
@@ -52,7 +54,11 @@ public final class AreaBreakerClient implements ClientModInitializer {
 
         boolean attackDown = client.options.attackKey.isPressed();
         if (!attackDown) {
-            if (wasAttackDown) clearQueue();
+            if (wasAttackDown) {
+                if (blockStarted && activePos != null)
+                    sendAction(client, PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, activePos);
+                clearQueue();
+            }
             wasAttackDown = false;
             return;
         }
@@ -64,49 +70,72 @@ public final class AreaBreakerClient implements ClientModInitializer {
                 activeSide = hit.getSide();
                 fillQueue(hit.getBlockPos(), activeSide);
                 sessionStarted = true;
-            } else {
-                return;
-            }
+            } else return;
         }
 
-        // Vanilla's interaction manager handles each block individually, preserving
-        // normal mining speed, tool durability, drops, and block-breaking checks.
-        if ( (activePos == null) && !queue.isEmpty()) {
-            activePos = queue.pollFirst();
-            activeTicks = 0;
-            if (!client.interactionManager.attackBlock(activePos, activeSide)) {
-                activePos = null;
-                return;
+        if (activePos == null) {
+            while (!queue.isEmpty()) {
+                BlockPos candidate = queue.pollFirst();
+                if (client.world.getBlockState(candidate).isAir()) continue;
+                if (client.player.getEyePos().squaredDistanceTo(Vec3d.ofCenter(candidate)) > 36.0) continue;
+                activePos = candidate;
+                breakingProgress = 0.0f;
+                waitForServerTicks = 0;
+                blockStarted = false;
+                break;
             }
         }
-        if (activePos == null) return;
-
+        if (activePos == null) {
+            if (queue.isEmpty()) clearQueue();
+            return;
+        }
         if (client.world.getBlockState(activePos).isAir()) {
             activePos = null;
+            blockStarted = false;
             return;
         }
-        if (++activeTicks > 2400) {
-            // Give up on a block that cannot be mined (for example, an unreachable block).
+        if (!blockStarted) {
+            sendAction(client, PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, activePos);
+            blockStarted = true;
+        }
+        if (waitForServerTicks > 0) {
+            waitForServerTicks--;
+            if (waitForServerTicks == 0) {
+                activePos = null;
+                blockStarted = false;
+            }
+            return;
+        }
+        float delta = client.world.getBlockState(activePos)
+                .calcBlockBreakingDelta(client.player, client.world, activePos);
+        if (delta <= 0.0f) {
+            sendAction(client, PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, activePos);
             activePos = null;
+            blockStarted = false;
             return;
         }
-        client.interactionManager.updateBlockBreakingProgress(activePos, activeSide);
+        breakingProgress += delta;
+        if (breakingProgress >= 1.0f) {
+            sendAction(client, PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, activePos);
+            waitForServerTicks = 3;
+        }
+    }
+
+    private static void sendAction(MinecraftClient client, PlayerActionC2SPacket.Action action, BlockPos pos) {
+        client.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(action, pos, activeSide));
     }
 
     private static void fillQueue(BlockPos center, Direction side) {
         List<BlockPos> positions = new ArrayList<>();
-        int low = -(areaSize / 2);
-        for (int a = 0; a < areaSize; a++) {
-            for (int b = 0; b < areaSize; b++) {
-                int u = low + a;
-                int v = low + b;
-                Vec3i offset = switch (side.getAxis()) {
-                    case Y -> new Vec3i(u, 0, v);
-                    case X -> new Vec3i(0, u, v);
-                    case Z -> new Vec3i(u, v, 0);
-                };
-                positions.add(center.add(offset));
-            }
+        int low = -((areaSize - 1) / 2);
+        for (int a = 0; a < areaSize; a++) for (int b = 0; b < areaSize; b++) {
+            int u = low + a, v = low + b;
+            BlockPos offset = switch (side.getAxis()) {
+                case Y -> new BlockPos(u, 0, v);
+                case X -> new BlockPos(0, u, v);
+                case Z -> new BlockPos(u, v, 0);
+            };
+            positions.add(center.add(offset));
         }
         positions.sort(Comparator.comparingDouble(pos -> pos.getSquaredDistance(center)));
         queue.addAll(positions);
@@ -116,9 +145,8 @@ public final class AreaBreakerClient implements ClientModInitializer {
         if (size == 2 || size == 3 || size == 4 || size == 5 || size == 10) {
             areaSize = size;
             MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null) {
+            if (client.player != null)
                 client.player.sendMessage(Text.literal("AreaBreaker: " + size + "x" + size), true);
-            }
         }
         clearQueue();
     }
@@ -126,7 +154,9 @@ public final class AreaBreakerClient implements ClientModInitializer {
     private static void clearQueue() {
         queue.clear();
         activePos = null;
-        activeTicks = 0;
+        breakingProgress = 0.0f;
+        waitForServerTicks = 0;
+        blockStarted = false;
         sessionStarted = false;
     }
 }
