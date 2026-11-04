@@ -18,7 +18,7 @@ public final class AreaBreakerScreen extends Screen {
         int gap = 8;
         int left = this.width / 2 - buttonWidth - gap / 2;
         int right = this.width / 2 + gap / 2;
-        int y = Math.max(46, Math.min(110, (this.height - 270) / 2));
+        int y = Math.max(75, Math.min(120, (this.height - 270) / 2));
 
         for (int i = 0; i < SIZES.length; i++) {
             final int size = SIZES[i];
