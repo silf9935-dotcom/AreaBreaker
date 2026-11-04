@@ -40,8 +40,8 @@ public final class AreaBreakerItems {
 
         ItemEnchantmentsComponent.Builder enchantments =
                 new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
-        add(enchantments, Enchantments.EFFICIENCY, tier == 1 ? 2 : tier == 2 ? 3 : 5);
-        add(enchantments, Enchantments.FORTUNE, tier == 1 ? 1 : tier == 2 ? 2 : 5);
+        add(enchantments, Enchantments.EFFICIENCY, tier == 1 ? 2 : 3);
+        add(enchantments, Enchantments.FORTUNE, tier == 1 ? 1 : tier == 2 ? 2 : 3);
         add(enchantments, Enchantments.UNBREAKING, tier == 1 ? 2 : tier == 2 ? 3 : 5);
         if (tier == 3) add(enchantments, Enchantments.MENDING, 1);
         stack.set(DataComponentTypes.STORED_ENCHANTMENTS, enchantments.build());
