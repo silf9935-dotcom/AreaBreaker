@@ -18,43 +18,70 @@ public final class AreaBreakerScreen extends Screen {
         int gap = 8;
         int left = this.width / 2 - buttonWidth - gap / 2;
         int right = this.width / 2 + gap / 2;
-        int y = Math.max(48, this.height / 2 - 92);
+        int y = Math.max(62, this.height / 2 - 105);
 
         for (int i = 0; i < SIZES.length; i++) {
             final int size = SIZES[i];
             int x = (i % 2 == 0) ? left : right;
-            int rowY = y + (i / 2) * 30;
-            String label = size == 1 ? "Выкл (1×1)" : size + " × " + size;
-            this.addDrawableChild(ButtonWidget.builder(Text.literal(label), button -> {
+            int rowY = y + (i / 2) * 29;
+            this.addDrawableChild(ButtonWidget.builder(sizeLabel(size), button -> {
                 AreaBreakerClient.setAreaSize(size);
-                button.setMessage(Text.literal("✓ " + label));
+                this.refreshButtons();
             }).dimensions(x, rowY, buttonWidth, 24).build());
         }
 
-        int optionsY = y + 3 * 30 + 5;
+        int optionsY = y + 3 * 29 + 8;
         this.addDrawableChild(ButtonWidget.builder(modeLabel(), button -> {
             AreaBreakerSettings.cycleMode();
-            button.setMessage(modeLabel());
+            this.refreshButtons();
         }).dimensions(left, optionsY, buttonWidth, 24).build());
 
         this.addDrawableChild(ButtonWidget.builder(shapeLabel(), button -> {
             AreaBreakerSettings.cycleShape();
-            button.setMessage(shapeLabel());
+            this.refreshButtons();
         }).dimensions(right, optionsY, buttonWidth, 24).build());
 
         this.addDrawableChild(ButtonWidget.builder(protectionLabel(), button -> {
             AreaBreakerSettings.toggleDurabilityProtection();
-            button.setMessage(protectionLabel());
-        }).dimensions(left, optionsY + 30, buttonWidth, 24).build());
+            this.refreshButtons();
+        }).dimensions(left, optionsY + 29, buttonWidth, 24).build());
 
         this.addDrawableChild(ButtonWidget.builder(pickupLabel(), button -> {
             AreaBreakerSettings.toggleAutoPickup();
-            button.setMessage(pickupLabel());
-        }).dimensions(right, optionsY + 30, buttonWidth, 24).build());
+            this.refreshButtons();
+        }).dimensions(right, optionsY + 29, buttonWidth, 24).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Готово"), button -> {
             if (this.client != null) this.client.setScreen(null);
         }).dimensions(this.width / 2 - 70, optionsY + 66, 140, 24).build());
+    }
+
+    private void refreshButtons() {
+        // Rebuild labels in place so the selected values are always visible.
+        for (var child : this.children()) {
+            if (child instanceof ButtonWidget button) {
+                String old = button.getMessage().getString();
+                if (old.contains("Режим:")) button.setMessage(modeLabel());
+                else if (old.contains("Форма:")) button.setMessage(shapeLabel());
+                else if (old.contains("Защита кирки:")) button.setMessage(protectionLabel());
+                else if (old.contains("Автоподбор:")) button.setMessage(pickupLabel());
+                else if (old.contains("Выкл (1×1)") || old.matches(".*[0-9]+ × [0-9]+.*")
+                        || old.startsWith("✓ ")) {
+                    for (int size : SIZES) {
+                        String label = size == 1 ? "Выкл (1×1)" : size + " × " + size;
+                        if (old.contains(label) || old.contains(label.replace("✓ ", ""))) {
+                            button.setMessage(sizeLabel(size));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static Text sizeLabel(int size) {
+        String label = size == 1 ? "Выкл (1×1)" : size + " × " + size;
+        return Text.literal((AreaBreakerClient.getAreaSize() == size ? "✓ " : "") + label);
     }
 
     private static Text modeLabel() {
@@ -76,19 +103,31 @@ public final class AreaBreakerScreen extends Screen {
     }
 
     private static Text pickupLabel() {
-        return Text.literal("Подбор: " + (AreaBreakerSettings.isAutoPickupEnabled() ? "Вкл" : "Выкл"));
+        return Text.literal("Автоподбор: " + (AreaBreakerSettings.isAutoPickupEnabled() ? "Вкл" : "Выкл"));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
-        int panelWidth = Math.min(430, this.width - 16);
+        int panelWidth = Math.min(440, this.width - 16);
         int panelLeft = (this.width - panelWidth) / 2;
-        context.fill(panelLeft, 12, panelLeft + panelWidth, this.height - 12, 0xD91B2028);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 22, 0xFFFFFF);
+        int panelTop = 12;
+        int panelBottom = this.height - 12;
+
+        context.fill(panelLeft - 1, panelTop - 1, panelLeft + panelWidth + 1, panelBottom + 1, 0xFF566579);
+        context.fill(panelLeft, panelTop, panelLeft + panelWidth, panelBottom, 0xF0121822);
+        context.fill(panelLeft + 1, panelTop + 1, panelLeft + panelWidth - 1, 43, 0xFF202D3C);
+        context.fill(panelLeft + 12, 48, panelLeft + panelWidth - 12, 49, 0xFF3C526B);
+
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Размер области · режим · форма · защита · подбор"),
-                this.width / 2, 36, 0xB8C7D9);
+                Text.literal("НАСТРОЙКА ДОБЫЧИ"), this.width / 2, 34, 0xFF9FC7F5);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("РАЗМЕР ОБЛАСТИ"), panelLeft + 18, 53, 0xFFE4EDF8);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("ПОВЕДЕНИЕ"), panelLeft + 18,
+                Math.max(150, this.height / 2 + 8), 0xFFE4EDF8);
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("V — открыть меню  •  Изменения применяются сразу"),
+                this.width / 2, panelBottom - 17, 0xFF9AAABD);
         super.render(context, mouseX, mouseY, delta);
     }
 
