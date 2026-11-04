@@ -6,7 +6,9 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
@@ -15,23 +17,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
-import java.util.ArrayDeque;
+
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
 import java.util.List;
+import java.util.UUID;
 
 public final class AreaBreakerClient implements ClientModInitializer {
     private static KeyBinding menuKey;
     private static int areaSize = 3;
-    private static final Deque<BlockPos> queue = new ArrayDeque<>();
-    private static BlockPos activePos;
-    private static Direction activeSide = Direction.UP;
-    private static float breakingProgress;
-    private static int waitForServerTicks;
-    private static boolean blockStarted;
     private static boolean wasAttackDown;
-    private static boolean sessionStarted;
+    private static boolean minedThisHold;
 
     @Override
     public void onInitializeClient() {
@@ -45,100 +40,65 @@ public final class AreaBreakerClient implements ClientModInitializer {
         while (menuKey.wasPressed()) {
             if (client.currentScreen == null) client.setScreen(new AreaBreakerScreen());
         }
-        if (client.player == null || client.world == null || client.getNetworkHandler() == null
-                || client.interactionManager == null || !client.isInSingleplayer()) {
-            clearQueue();
+
+        if (client.player == null || client.world == null || !client.isInSingleplayer()) {
             wasAttackDown = false;
+            minedThisHold = false;
             return;
         }
 
         boolean attackDown = client.options.attackKey.isPressed();
         if (!attackDown) {
-            if (wasAttackDown) {
-                if (blockStarted && activePos != null)
-                    sendAction(client, PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, activePos);
-                clearQueue();
-            }
             wasAttackDown = false;
+            minedThisHold = false;
             return;
         }
         wasAttackDown = true;
+        if (minedThisHold) return;
 
-        if (!sessionStarted) {
-            if (client.crosshairTarget instanceof BlockHitResult hit
-                    && hit.getType() == HitResult.Type.BLOCK) {
-                activeSide = hit.getSide();
-                fillQueue(hit.getBlockPos(), activeSide);
-                sessionStarted = true;
-            } else return;
-        }
+        if (!(client.crosshairTarget instanceof BlockHitResult hit)
+                || hit.getType() != HitResult.Type.BLOCK) return;
 
-        if (activePos == null) {
-            while (!queue.isEmpty()) {
-                BlockPos candidate = queue.pollFirst();
-                if (client.world.getBlockState(candidate).isAir()) continue;
-                if (client.player.getEyePos().squaredDistanceTo(Vec3d.ofCenter(candidate)) > 36.0) continue;
-                activePos = candidate;
-                breakingProgress = 0.0f;
-                waitForServerTicks = 0;
-                blockStarted = false;
-                break;
+        MinecraftServer server = client.getServer();
+        if (server == null) return;
+
+        BlockPos center = hit.getBlockPos().toImmutable();
+        Direction side = hit.getSide();
+        UUID playerId = client.player.getUuid();
+        var dimension = client.world.getRegistryKey();
+        List<BlockPos> positions = buildArea(center, side, areaSize);
+        minedThisHold = true;
+
+        server.execute(() -> {
+            ServerPlayerEntity serverPlayer = server.getPlayerManager().getPlayer(playerId);
+            ServerWorld serverWorld = server.getWorld(dimension);
+            if (serverPlayer == null || serverWorld == null
+                    || serverPlayer.getServerWorld() != serverWorld) return;
+
+            for (BlockPos pos : positions) {
+                if (serverPlayer.isRemoved() || serverWorld.getBlockState(pos).isAir()) continue;
+                if (serverPlayer.getEyePos().squaredDistanceTo(Vec3d.ofCenter(pos)) > 36.0) continue;
+                serverPlayer.interactionManager.tryBreakBlock(pos);
             }
-        }
-        if (activePos == null) {
-            if (queue.isEmpty()) clearQueue();
-            return;
-        }
-        if (client.world.getBlockState(activePos).isAir()) {
-            activePos = null;
-            blockStarted = false;
-            return;
-        }
-        if (!blockStarted) {
-            sendAction(client, PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, activePos);
-            blockStarted = true;
-        }
-        if (waitForServerTicks > 0) {
-            waitForServerTicks--;
-            if (waitForServerTicks == 0) {
-                activePos = null;
-                blockStarted = false;
-            }
-            return;
-        }
-        float delta = client.world.getBlockState(activePos)
-                .calcBlockBreakingDelta(client.player, client.world, activePos);
-        if (delta <= 0.0f) {
-            sendAction(client, PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, activePos);
-            activePos = null;
-            blockStarted = false;
-            return;
-        }
-        breakingProgress += delta;
-        if (breakingProgress >= 1.0f) {
-            sendAction(client, PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, activePos);
-            waitForServerTicks = 3;
-        }
+        });
     }
 
-    private static void sendAction(MinecraftClient client, PlayerActionC2SPacket.Action action, BlockPos pos) {
-        client.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(action, pos, activeSide));
-    }
-
-    private static void fillQueue(BlockPos center, Direction side) {
-        List<BlockPos> positions = new ArrayList<>();
-        int low = -((areaSize - 1) / 2);
-        for (int a = 0; a < areaSize; a++) for (int b = 0; b < areaSize; b++) {
-            int u = low + a, v = low + b;
-            BlockPos offset = switch (side.getAxis()) {
-                case Y -> new BlockPos(u, 0, v);
-                case X -> new BlockPos(0, u, v);
-                case Z -> new BlockPos(u, v, 0);
-            };
-            positions.add(center.add(offset));
+    private static List<BlockPos> buildArea(BlockPos center, Direction side, int size) {
+        List<BlockPos> positions = new ArrayList<>(size * size);
+        int low = -(size / 2);
+        for (int a = 0; a < size; a++) {
+            for (int b = 0; b < size; b++) {
+                int u = low + a;
+                int v = low + b;
+                BlockPos offset = switch (side.getAxis()) {
+                    case Y -> new BlockPos(u, 0, v);
+                    case X -> new BlockPos(0, u, v);
+                    case Z -> new BlockPos(u, v, 0);
+                };
+                positions.add(center.add(offset));
+            }
         }
-        positions.sort(Comparator.comparingDouble(pos -> pos.getSquaredDistance(center)));
-        queue.addAll(positions);
+        return positions;
     }
 
     static void setAreaSize(int size) {
@@ -148,15 +108,5 @@ public final class AreaBreakerClient implements ClientModInitializer {
             if (client.player != null)
                 client.player.sendMessage(Text.literal("AreaBreaker: " + size + "x" + size), true);
         }
-        clearQueue();
-    }
-
-    private static void clearQueue() {
-        queue.clear();
-        activePos = null;
-        breakingProgress = 0.0f;
-        waitForServerTicks = 0;
-        blockStarted = false;
-        sessionStarted = false;
     }
 }
