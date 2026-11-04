@@ -46,9 +46,16 @@ public final class AreaBreakerScreen extends Screen {
             AreaBreakerClient.addTargetBlockToFilter();
             refreshButtons();
         }).dimensions(right, optionsY + 81, buttonWidth, 23).build());
+        this.addDrawableChild(ButtonWidget.builder(safeModeLabel(), button -> {
+            AreaBreakerSettings.toggleSafeMode();
+            button.setMessage(safeModeLabel());
+        }).dimensions(left, optionsY + 108, buttonWidth, 23).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Прокачка (U)"), button -> {
+            if (this.client != null) this.client.setScreen(new AreaBreakerUpgradeScreen());
+        }).dimensions(right, optionsY + 108, buttonWidth, 23).build());
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Готово"), button -> {
             if (this.client != null) this.client.setScreen(null);
-        }).dimensions(this.width / 2 - 70, optionsY + 111, 140, 23).build());
+        }).dimensions(this.width / 2 - 70, optionsY + 138, 140, 23).build());
     }
 
     private void refreshButtons() {
@@ -62,6 +69,7 @@ public final class AreaBreakerScreen extends Screen {
                 else if (old.startsWith("AreaBreaker:")) button.setMessage(enabledLabel());
                 else if (old.startsWith("Автоплавка:")) button.setMessage(smeltLabel());
                 else if (old.startsWith("Фильтр:")) button.setMessage(filterLabel());
+                else if (old.startsWith("Защита блоков:")) button.setMessage(safeModeLabel());
                 else if (old.startsWith("Выкл") || old.contains(" × ")) {
                     for (int size : SIZES) {
                         String plain = size == 1 ? "Выкл (1×1)" : size + " × " + size;
@@ -100,6 +108,9 @@ public final class AreaBreakerScreen extends Screen {
     private static Text filterLabel() {
         return Text.literal("Фильтр: " + AreaBreakerSettings.getFilterMode() + " (" + AreaBreakerSettings.getFilterBlockCount() + ")");
     }
+    private static Text safeModeLabel() {
+        return Text.literal("Защита блоков: " + (AreaBreakerSettings.isSafeModeEnabled() ? "Вкл" : "Выкл"));
+    }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -120,7 +131,7 @@ public final class AreaBreakerScreen extends Screen {
                 + "  •  Блоков " + AreaBreakerSettings.getBlocksMined() + "  •  Руд " + AreaBreakerSettings.getOresMined();
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(stats), this.width / 2, panelBottom - 30, 0xFFB7D7B5);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("V меню • B включить • G режим • H автоплавка • K добавить блок"),
+                Text.literal("V меню • U улучшения • B вкл • G режим • N форма • H плавка • K фильтр • M защита • J HUD"),
                 this.width / 2, panelBottom - 16, 0xFF9AAABD);
         super.render(context, mouseX, mouseY, delta);
     }
