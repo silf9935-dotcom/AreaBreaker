@@ -2,29 +2,21 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "dae",
-    "Dbc",
-    "iIg"
+    "ded",
+    "aba",
+    "ded"
   ],
   "key": {
-    "d": "minecraft:diamond",
-    "a": "minecraft:amethyst_shard",
-    "e": "minecraft:emerald",
-    "D": "minecraft:diamond_pickaxe",
-    "b": "minecraft:book",
-    "c": "minecraft:copper_pickaxe",
-    "i": "minecraft:iron_ingot",
-    "I": "minecraft:iron_pickaxe",
-    "g": "minecraft:gold_ingot"
+    "d": { "item": "minecraft:diamond" },
+    "e": { "item": "minecraft:emerald" },
+    "a": { "item": "minecraft:amethyst_shard" },
+    "b": { "item": "minecraft:book" }
   },
   "result": {
     "id": "minecraft:enchanted_book",
     "count": 1,
     "components": {
-      "minecraft:custom_name": {
-        "text": "Шахтёр III",
-        "italic": false
-      },
+      "minecraft:custom_name": { "text": "Шахтёр III", "italic": false },
       "minecraft:stored_enchantments": {
         "levels": {
           "minecraft:efficiency": 5,
