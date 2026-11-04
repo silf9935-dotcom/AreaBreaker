@@ -1,38 +1,21 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "pattern": [
     "dae",
     "Dbc",
     "iIg"
   ],
   "key": {
-    "d": {
-      "item": "minecraft:diamond"
-    },
-    "a": {
-      "item": "minecraft:amethyst_shard"
-    },
-    "e": {
-      "item": "minecraft:emerald"
-    },
-    "D": {
-      "item": "minecraft:diamond_pickaxe"
-    },
-    "b": {
-      "item": "minecraft:book"
-    },
-    "c": {
-      "item": "minecraft:copper_pickaxe"
-    },
-    "i": {
-      "item": "minecraft:iron_ingot"
-    },
-    "I": {
-      "item": "minecraft:iron_pickaxe"
-    },
-    "g": {
-      "item": "minecraft:gold_ingot"
-    }
+    "d": "minecraft:diamond",
+    "a": "minecraft:amethyst_shard",
+    "e": "minecraft:emerald",
+    "D": "minecraft:diamond_pickaxe",
+    "b": "minecraft:book",
+    "c": "minecraft:copper_pickaxe",
+    "i": "minecraft:iron_ingot",
+    "I": "minecraft:iron_pickaxe",
+    "g": "minecraft:gold_ingot"
   },
   "result": {
     "id": "minecraft:enchanted_book",
