@@ -1,0 +1,11 @@
+{
+  "key.areabreaker.menu": "Open AreaBreaker menu",
+  "key.areabreaker.toggle": "Toggle AreaBreaker",
+  "key.areabreaker.mode": "Switch mining mode",
+  "key.areabreaker.smelt": "Toggle auto-smelting",
+  "key.areabreaker.filter_add": "Add/remove targeted block from filter",
+  "key.areabreaker.upgrades": "Open miner upgrade tree",
+  "key.areabreaker.hud": "Toggle AreaBreaker HUD",
+  "key.areabreaker.shape": "Cycle mining shape",
+  "key.areabreaker.safe_mode": "Toggle protected-block safety"
+}
