@@ -196,7 +196,7 @@ public final class AreaBreakerSettings {
     public static int getFilterBlockCount() { return filterBlocks.size(); }
 
     public static int getAvailableUpgradePoints() {
-        return Math.max(0, (getMiningLevel() - 1) / 5 - veinRank - magnetRank - reinforcedRank - geologistRank - tunnelerRank - reachRank);
+        return Math.max(0, getMiningLevel() / 5 - veinRank - magnetRank - reinforcedRank - geologistRank - tunnelerRank - reachRank);
     }
 
     public static int getUpgradeRank(String id) {
