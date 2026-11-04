@@ -28,13 +28,14 @@ public final class AreaBreakerClient implements ClientModInitializer {
     private static Direction activeSide = Direction.UP;
     private static int activeTicks;
     private static boolean wasAttackDown;
+    private static boolean sessionStarted;
 
     @Override
     public void onInitializeClient() {
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.areabreaker.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V,
                 "category.areabreaker"));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> tick(client));
+        ClientTickEvents.END_CLIENT_TICK.register(AreaBreakerClient::tick);
     }
 
     private static void tick(MinecraftClient client) {
@@ -44,6 +45,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
         if (client.player == null || client.world == null || client.interactionManager == null
                 || !client.isInSingleplayer()) {
             clearQueue();
+            wasAttackDown = false;
             return;
         }
 
@@ -55,33 +57,35 @@ public final class AreaBreakerClient implements ClientModInitializer {
         }
         wasAttackDown = true;
 
-        if (queue.isEmpty() && activePos == null) {
+        if (!sessionStarted) {
             if (client.crosshairTarget instanceof BlockHitResult hit
                     && hit.getType() == HitResult.Type.BLOCK) {
                 activeSide = hit.getSide();
                 fillQueue(hit.getBlockPos(), activeSide);
+                sessionStarted = true;
             } else {
                 return;
             }
         }
 
-        // Process one block at a time through vanilla's mining manager so normal
-        // tool speed, durability, drops, and block-breaking rules remain in effect.
-        if (activePos == null) {
+        // Vanilla's interaction manager handles each block individually, preserving
+        // normal mining speed, tool durability, drops, and block-breaking checks.
+        if ( (activePos == null) && !queue.isEmpty()) {
             activePos = queue.pollFirst();
             activeTicks = 0;
-            if (activePos == null) return;
             if (!client.interactionManager.attackBlock(activePos, activeSide)) {
                 activePos = null;
                 return;
             }
         }
+        if (activePos == null) return;
 
         if (client.world.getBlockState(activePos).isAir()) {
             activePos = null;
             return;
         }
         if (++activeTicks > 2400) {
+            // Give up on a block that cannot be mined (for example, an unreachable block).
             activePos = null;
             return;
         }
@@ -111,7 +115,9 @@ public final class AreaBreakerClient implements ClientModInitializer {
         if (size == 2 || size == 3 || size == 4 || size == 5 || size == 10) {
             areaSize = size;
             MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null) client.player.sendMessage(Text.literal("AreaBreaker: " + size + "x" + size), true);
+            if (client.player != null) {
+                client.player.sendMessage(Text.literal("AreaBreaker: " + size + "x" + size), true);
+            }
         }
         clearQueue();
     }
@@ -120,5 +126,6 @@ public final class AreaBreakerClient implements ClientModInitializer {
         queue.clear();
         activePos = null;
         activeTicks = 0;
+        sessionStarted = false;
     }
 }
