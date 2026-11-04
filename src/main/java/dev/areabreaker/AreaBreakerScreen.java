@@ -114,7 +114,8 @@ public final class AreaBreakerScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        // Avoid the 1.21.11 screen blur being requested twice in one frame.
+        context.fill(0, 0, this.width, this.height, 0xC0101722);
         int panelWidth = Math.min(440, this.width - 16);
         int panelLeft = (this.width - panelWidth) / 2;
         int panelTop = 8;
