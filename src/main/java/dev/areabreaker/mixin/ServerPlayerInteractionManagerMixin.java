@@ -1,8 +1,10 @@
 package dev.areabreaker.mixin;
 
 import dev.areabreaker.AreaBreakerSettings;
+import net.minecraft.block.Block;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ServerWorld;
@@ -12,7 +14,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.block.Block;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,7 +41,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
     @Inject(method = "tryBreakBlock", at = @At("RETURN"))
     private void areabreaker$afterBlockBroken(BlockPos center, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue() || areabreaker$breakingArea || player.isRemoved()) return;
+        if (!cir.getReturnValue() || areabreakingInvalid()) return;
+        AreaBreakerSettings.recordMined(areabreaker$centerBlock);
+        if (areabreaker$breakingArea || !AreaBreakerSettings.isEnabled() || player.isRemoved()) return;
 
         int size = AreaBreakerSettings.getAreaSize();
         AreaBreakerSettings.Mode mode = AreaBreakerSettings.getMode();
@@ -52,20 +55,23 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
         areabreaker$breakingArea = true;
         try {
-            if (mode == AreaBreakerSettings.Mode.VEIN) {
-                areabreaker$breakVein(center, areabreaker$centerBlock);
-            } else {
-                areabreaker$breakShape(center, side, size);
-            }
+            if (mode == AreaBreakerSettings.Mode.VEIN) areabreaker$breakVein(center, areabreaker$centerBlock);
+            else areabreaker$breakShape(center, side, size);
             if (AreaBreakerSettings.isAutoPickupEnabled()) areabreaker$collectNearbyDrops(center, size + 3);
         } finally {
             areabreaker$breakingArea = false;
+            AreaBreakerSettings.saveNow();
         }
     }
 
     @Unique
+    private boolean areabreakingInvalid() {
+        return areabreaker$centerBlock == null;
+    }
+
+    @Unique
     private void areabreaker$breakVein(BlockPos center, Block targetBlock) {
-        if (targetBlock == null) return;
+        if (targetBlock == null || !AreaBreakerSettings.isBlockAllowed(targetBlock)) return;
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         Set<BlockPos> visited = new HashSet<>();
         queue.add(center);
@@ -75,11 +81,13 @@ public abstract class ServerPlayerInteractionManagerMixin {
             BlockPos current = queue.removeFirst();
             for (Direction direction : Direction.values()) {
                 BlockPos next = current.offset(direction);
-                if (!visited.add(next)) continue;
-                if (next.getManhattanDistance(center) > 6) continue;
-                if (world.getBlockState(next).getBlock() != targetBlock) continue;
-                if (!areabreaker$inReach(next) || !areabreaker$hasToolDurability()) continue;
-                if (((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(next)) broken++;
+                if (!visited.add(next) || next.getManhattanDistance(center) > 6) continue;
+                if (world.getBlockState(next).getBlock() != targetBlock || !areabreaker$inReach(next)
+                        || !AreaBreakerSettings.isBlockAllowed(targetBlock) || !areabreaker$hasToolDurability()) continue;
+                if (((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(next)) {
+                    broken++;
+                    AreaBreakerSettings.recordMined(targetBlock);
+                }
                 if (broken >= 64) break;
                 queue.addLast(next);
             }
@@ -91,7 +99,6 @@ public abstract class ServerPlayerInteractionManagerMixin {
         int low = -(size / 2);
         Direction facing = player.getHorizontalFacing();
         Direction widthDirection = facing.rotateYClockwise();
-
         int depth = AreaBreakerSettings.getShape() == AreaBreakerSettings.Shape.TUNNEL ? 3 : 1;
         for (int d = 0; d < depth; d++) {
             for (int a = 0; a < size; a++) {
@@ -100,8 +107,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
                     int v = low + b;
                     BlockPos offset;
                     switch (AreaBreakerSettings.getShape()) {
-                        case WALL -> offset = new BlockPos(widthDirection.getOffsetX() * u,
-                                v, widthDirection.getOffsetZ() * u);
+                        case WALL -> offset = new BlockPos(widthDirection.getOffsetX() * u, v, widthDirection.getOffsetZ() * u);
                         case STRIP -> offset = switch (side.getAxis()) {
                             case Y -> new BlockPos(u, 0, 0);
                             case X -> new BlockPos(0, 0, u);
@@ -115,8 +121,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
                     }
                     BlockPos target = center.add(offset);
                     if (target.equals(center) || world.getBlockState(target).isAir()) continue;
-                    if (!areabreaker$inReach(target) || !areabreaker$hasToolDurability()) continue;
-                    ((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(target);
+                    Block block = world.getBlockState(target).getBlock();
+                    if (!AreaBreakerSettings.isBlockAllowed(block) || !areabreaker$inReach(target) || !areabreaker$hasToolDurability()) continue;
+                    if (((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(target)) AreaBreakerSettings.recordMined(block);
                 }
             }
         }
@@ -146,12 +153,18 @@ public abstract class ServerPlayerInteractionManagerMixin {
     @Unique
     private void areabreaker$collectNearbyDrops(BlockPos center, int radius) {
         Box area = new Box(center).expand(radius);
-        for (ItemEntity itemEntity : world.getEntitiesByClass(ItemEntity.class, area, entity -> entity.isAlive())) {
-            ItemStack stack = itemEntity.getStack();
+        for (ItemEntity entity : world.getEntitiesByClass(ItemEntity.class, area, ItemEntity::isAlive)) {
+            ItemStack stack = entity.getStack();
             if (stack.isEmpty()) continue;
+            if (AreaBreakerSettings.isAutoSmeltEnabled()) {
+                if (stack.isOf(Items.RAW_IRON)) stack = new ItemStack(Items.IRON_INGOT, stack.getCount());
+                else if (stack.isOf(Items.RAW_GOLD)) stack = new ItemStack(Items.GOLD_INGOT, stack.getCount());
+                else if (stack.isOf(Items.RAW_COPPER)) stack = new ItemStack(Items.COPPER_INGOT, stack.getCount());
+                entity.setStack(stack);
+            }
             player.getInventory().insertStack(stack);
-            if (stack.isEmpty()) itemEntity.discard();
-            else itemEntity.setStack(stack);
+            if (stack.isEmpty()) entity.discard();
+            else entity.setStack(stack);
         }
     }
 }

@@ -7,15 +7,9 @@
     " i "
   ],
   "key": {
-    "i": {
-      "item": "minecraft:iron_ingot"
-    },
-    "s": {
-      "item": "minecraft:stone"
-    },
-    "l": {
-      "item": "minecraft:lapis_lazuli"
-    }
+    "i": "minecraft:iron_ingot",
+    "s": "minecraft:stone",
+    "l": "minecraft:lapis_lazuli"
   },
   "result": {
     "id": "minecraft:enchanted_book",

@@ -7,15 +7,9 @@
     "g g"
   ],
   "key": {
-    "g": {
-      "item": "minecraft:gold_ingot"
-    },
-    "l": {
-      "item": "minecraft:lapis_lazuli"
-    },
-    "b": {
-      "item": "minecraft:book"
-    }
+    "g": "minecraft:gold_ingot",
+    "l": "minecraft:lapis_lazuli",
+    "b": "minecraft:book"
   },
   "result": {
     "id": "minecraft:enchanted_book",

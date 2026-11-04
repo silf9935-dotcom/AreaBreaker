@@ -1,4 +1,7 @@
 {
-  "itemGroup.areabreaker.main": "AreaBreaker — Шахтёр",
-  "key.areabreaker.menu": "Открыть меню AreaBreaker"
+  "key.areabreaker.menu": "Открыть меню AreaBreaker",
+  "key.areabreaker.toggle": "Включить/выключить AreaBreaker",
+  "key.areabreaker.mode": "Переключить режим добычи",
+  "key.areabreaker.smelt": "Включить/выключить автоплавку",
+  "key.areabreaker.filter_add": "Добавить блок в фильтр"
 }

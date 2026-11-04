@@ -7,18 +7,10 @@
     "ded"
   ],
   "key": {
-    "d": {
-      "item": "minecraft:diamond"
-    },
-    "e": {
-      "item": "minecraft:emerald"
-    },
-    "a": {
-      "item": "minecraft:amethyst_shard"
-    },
-    "b": {
-      "item": "minecraft:book"
-    }
+    "d": "minecraft:diamond",
+    "e": "minecraft:emerald",
+    "a": "minecraft:amethyst_shard",
+    "b": "minecraft:book"
   },
   "result": {
     "id": "minecraft:enchanted_book",
