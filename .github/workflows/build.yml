@@ -22,11 +22,27 @@ jobs:
           gradle-version: '9.2.0'
       - name: Validate resource JSON
         run: find src/main/resources -name '*.json' -print0 | xargs -0 -n1 python -m json.tool > /dev/null
+      - name: Validate 1.21.11 recipe schema
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root = pathlib.Path('src/main/resources')
+          meta = json.loads((root / 'pack.mcmeta').read_text())
+          assert meta['pack']['min_format'] == [94, 1]
+          recipes = list((root / 'data/areabreaker/recipe').glob('*.json'))
+          assert len(recipes) == 3, f'Expected 3 miner recipes, found {len(recipes)}'
+          for path in recipes:
+              recipe = json.loads(path.read_text())
+              assert recipe['type'] == 'minecraft:crafting_shaped', path
+              assert all(isinstance(value, str) for value in recipe['key'].values()), f'{path}: 1.21.11 ingredients must be string IDs'
+              assert recipe['result']['id'] == 'minecraft:enchanted_book', path
+          print('Validated 3 Minecraft 1.21.11 shaped book recipes')
+          PY
       - name: Build mod
         run: gradle build --no-daemon
       - name: Upload mod JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AreaBreaker-1.0.1-1.21.11
+          name: AreaBreaker-1.1.0-1.21.11
           path: build/libs/*.jar
           if-no-files-found: error
