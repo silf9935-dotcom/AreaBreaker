@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " i ",
+    "sbc",
+    " w "
+  ],
+  "key": {
+    "i": {
+      "item": "minecraft:iron_ingot"
+    },
+    "s": {
+      "item": "minecraft:stone_pickaxe"
+    },
+    "b": {
+      "item": "minecraft:book"
+    },
+    "c": {
+      "item": "minecraft:copper_pickaxe"
+    },
+    "w": {
+      "item": "minecraft:wooden_pickaxe"
+    }
+  },
+  "result": {
+    "id": "minecraft:enchanted_book",
+    "count": 1,
+    "components": {
+      "minecraft:custom_name": {
+        "text": "Шахтёр I",
+        "italic": false
+      },
+      "minecraft:stored_enchantments": {
+        "levels": {
+          "minecraft:efficiency": 2,
+          "minecraft:fortune": 1,
+          "minecraft:unbreaking": 2
+        }
+      }
+    }
+  }
+}
