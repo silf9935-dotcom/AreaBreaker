@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 public final class AreaBreakerScreen extends Screen {
     private static final int[] SIZES = {1, 2, 3, 4, 5, 10};
 
-    public AreaBreakerScreen() { super(Text.literal("AreaBreaker 1.1.0")); }
+    public AreaBreakerScreen() { super(Text.literal("AreaBreaker 1.2.0")); }
 
     @Override
     protected void init() {
@@ -129,7 +129,10 @@ public final class AreaBreakerScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, Text.literal("ПОВЕДЕНИЕ И ФИЛЬТРЫ"), panelLeft + 18, y + 80, 0xFFE4EDF8);
         String stats = "Уровень " + AreaBreakerSettings.getMiningLevel() + "  •  XP " + AreaBreakerSettings.getMiningXp()
                 + "  •  Блоков " + AreaBreakerSettings.getBlocksMined() + "  •  Руд " + AreaBreakerSettings.getOresMined();
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(stats), this.width / 2, panelBottom - 30, 0xFFB7D7B5);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(stats), this.width / 2, panelBottom - 42, 0xFFB7D7B5);
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Предметов собрано: " + AreaBreakerSettings.getItemsCollected() + " • Рекорд жилы: " + AreaBreakerSettings.getLongestVein()),
+                this.width / 2, panelBottom - 29, 0xFFD8C79B);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("V меню • U улучшения • B вкл • G режим • N форма • H плавка • K фильтр • M защита • J HUD"),
                 this.width / 2, panelBottom - 16, 0xFF9AAABD);
