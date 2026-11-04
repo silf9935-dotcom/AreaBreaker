@@ -113,6 +113,7 @@ public final class AreaBreakerScreen extends Screen {
         int panelLeft = (this.width - panelWidth) / 2;
         int panelTop = 12;
         int panelBottom = this.height - 12;
+        int y = Math.max(75, Math.min(120, (this.height - 270) / 2));
 
         context.fill(panelLeft - 1, panelTop - 1, panelLeft + panelWidth + 1, panelBottom + 1, 0xFF566579);
         context.fill(panelLeft, panelTop, panelLeft + panelWidth, panelBottom, 0xF0121822);
