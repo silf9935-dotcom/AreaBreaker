@@ -61,7 +61,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
         try {
             if (mode == AreaBreakerSettings.Mode.VEIN) areabreaker$breakVein(center, areabreaker$centerBlock);
             else areabreaker$breakShape(center, side, size);
-            if (AreaBreakerSettings.isAutoPickupEnabled()) areabreaker$collectNearbyDrops(center, AreaBreakerSettings.getMagnetRadius());
+            if (AreaBreakerSettings.isAutoPickupEnabled()) areabreaker$collectNearbyDrops(center, Math.max(AreaBreakerSettings.getMagnetRadius(), size / 2 + 2));
         } finally {
             areabreaker$breakingArea = false;
             AreaBreakerSettings.saveNow();
