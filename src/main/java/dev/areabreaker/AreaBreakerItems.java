@@ -51,6 +51,6 @@ public final class AreaBreakerItems {
     private static void add(ItemEnchantmentsComponent.Builder builder,
                             net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> key,
                             int level) {
-        builder.add(Registries.ENCHANTMENT.getEntry(key), level);
+        builder.add(Registries.ENCHANTMENT.getEntry(Registries.ENCHANTMENT.getValueOrThrow(key)), level);
     }
 }
