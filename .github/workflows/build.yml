@@ -2,7 +2,7 @@ name: Build AreaBreaker
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/mining-modes ]
   workflow_dispatch:
 
 permissions:
