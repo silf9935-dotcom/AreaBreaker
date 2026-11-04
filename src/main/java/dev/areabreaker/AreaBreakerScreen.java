@@ -18,7 +18,7 @@ public final class AreaBreakerScreen extends Screen {
         int gap = 8;
         int left = this.width / 2 - buttonWidth - gap / 2;
         int right = this.width / 2 + gap / 2;
-        int y = Math.max(62, this.height / 2 - 105);
+        int y = Math.max(46, Math.min(110, (this.height - 270) / 2));
 
         for (int i = 0; i < SIZES.length; i++) {
             final int size = SIZES[i];
@@ -124,7 +124,7 @@ public final class AreaBreakerScreen extends Screen {
                 Text.literal("НАСТРОЙКА ДОБЫЧИ"), this.width / 2, 34, 0xFF9FC7F5);
         context.drawTextWithShadow(this.textRenderer, Text.literal("РАЗМЕР ОБЛАСТИ"), panelLeft + 18, 53, 0xFFE4EDF8);
         context.drawTextWithShadow(this.textRenderer, Text.literal("ПОВЕДЕНИЕ"), panelLeft + 18,
-                Math.max(150, this.height / 2 + 8), 0xFFE4EDF8);
+                y + 82, 0xFFE4EDF8);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("V — открыть меню  •  Изменения применяются сразу"),
                 this.width / 2, panelBottom - 17, 0xFF9AAABD);
