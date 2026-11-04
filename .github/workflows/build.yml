@@ -20,11 +20,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.2.0'
+      - name: Validate resource JSON
+        run: find src/main/resources -name '*.json' -print0 | xargs -0 -n1 python -m json.tool > /dev/null
       - name: Build mod
         run: gradle build --no-daemon
       - name: Upload mod JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AreaBreaker-1.21.11
+          name: AreaBreaker-1.0.1-1.21.11
           path: build/libs/*.jar
           if-no-files-found: error
