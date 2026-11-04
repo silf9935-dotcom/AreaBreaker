@@ -40,7 +40,7 @@ public final class AreaBreakerUpgradeScreen extends Screen {
             case "vein" -> "Жилы: +" + (rank * 16) + " к лимиту";
             case "magnet" -> "Магнит: радиус " + AreaBreakerSettings.getMagnetRadius();
             case "reinforced" -> "Укрепление: резерв " + AreaBreakerSettings.getDurabilityReserve();
-            case "geologist" -> "Геолог: +" + (rank * 10) + "% XP";
+            case "geologist" -> "Геолог: +" + rank + " XP за руду";
             case "tunneler" -> "Бур: глубина " + AreaBreakerSettings.getTunnelDepth();
             case "reach" -> "Дальность: " + String.format(java.util.Locale.ROOT, "%.1f", AreaBreakerSettings.getMiningReach());
             default -> id;
