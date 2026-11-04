@@ -14,28 +14,29 @@ public final class AreaBreakerScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonWidth = 120;
-        int gap = 8;
-        int total = SIZES.length * buttonWidth + (SIZES.length - 1) * gap;
-        int startX = (this.width - total) / 2;
-        int y = this.height / 2 - 10;
+        int buttonWidth = 150;
+        int buttonHeight = 24;
+        int gap = 7;
+        int totalHeight = SIZES.length * buttonHeight + (SIZES.length - 1) * gap;
+        int startY = (this.height - totalHeight) / 2;
         for (int i = 0; i < SIZES.length; i++) {
             int size = SIZES[i];
-            int x = startX + i * (buttonWidth + gap);
+            int y = startY + i * (buttonHeight + gap);
             this.addDrawableChild(ButtonWidget.builder(Text.literal(size + " x " + size), button -> {
                 AreaBreakerClient.setAreaSize(size);
                 if (this.client != null) this.client.setScreen(null);
-            }).dimensions(x, y, buttonWidth, 24).build());
+            }).dimensions((this.width - buttonWidth) / 2, y, buttonWidth, buttonHeight).build());
         }
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 42, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+                this.width / 2, (this.height - 150) / 2 - 22, 0xFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Выбери размер. Удерживай ЛКМ, глядя на блок (только одиночная игра)."),
-                this.width / 2, this.height / 2 + 28, 0xCCCCCC);
+                Text.literal("Удерживай ЛКМ, глядя на блок. Только одиночная игра."),
+                this.width / 2, (this.height + 150) / 2 + 8, 0xCCCCCC);
         super.render(context, mouseX, mouseY, delta);
     }
 
