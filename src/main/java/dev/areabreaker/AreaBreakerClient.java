@@ -26,7 +26,7 @@ public final class AreaBreakerClient implements ClientModInitializer {
         });
     }
 
-    static int getAreaSize() {
+    public static int getAreaSize() {
         return areaSize;
     }
 
