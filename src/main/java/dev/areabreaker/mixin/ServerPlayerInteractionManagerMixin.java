@@ -61,7 +61,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
         try {
             if (mode == AreaBreakerSettings.Mode.VEIN) areabreaker$breakVein(center, areabreaker$centerBlock);
             else areabreaker$breakShape(center, side, size);
-            if (AreaBreakerSettings.isAutoPickupEnabled()) areabreaker$collectNearbyDrops(center, size + 3);
+            if (AreaBreakerSettings.isAutoPickupEnabled()) areabreaker$collectNearbyDrops(center, AreaBreakerSettings.getMagnetRadius());
         } finally {
             areabreaker$breakingArea = false;
             AreaBreakerSettings.saveNow();
@@ -87,7 +87,8 @@ public abstract class ServerPlayerInteractionManagerMixin {
             for (Direction direction : Direction.values()) {
                 BlockPos next = current.offset(direction);
                 if (!visited.add(next) || next.getManhattanDistance(center) > 6) continue;
-                if (world.getBlockState(next).getBlock() != targetBlock || !areabreaker$inReach(next)
+                var state = world.getBlockState(next);
+                if (state.getBlock() != targetBlock || state.hasBlockEntity() || !areabreaker$inReach(next)
                         || !AreaBreakerSettings.isBlockAllowed(targetBlock) || !areabreaker$hasToolDurability()) continue;
                 if (((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(next)) {
                     broken++;
@@ -97,6 +98,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
                 queue.addLast(next);
             }
         }
+        AreaBreakerSettings.recordVeinSize(broken + 1L);
     }
 
     @Unique
@@ -126,8 +128,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
                     }
                     BlockPos target = center.add(offset);
                     if (target.equals(center) || world.getBlockState(target).isAir()) continue;
-                    Block block = world.getBlockState(target).getBlock();
-                    if (!AreaBreakerSettings.isBlockAllowed(block) || !areabreaker$inReach(target) || !areabreaker$hasToolDurability()) continue;
+                    var state = world.getBlockState(target);
+                    Block block = state.getBlock();
+                    if (state.hasBlockEntity() || !AreaBreakerSettings.isBlockAllowed(block) || !areabreaker$inReach(target) || !areabreaker$hasToolDurability()) continue;
                     if (((ServerPlayerInteractionManager)(Object)this).tryBreakBlock(target)) AreaBreakerSettings.recordMined(block);
                 }
             }
@@ -145,14 +148,15 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
     @Unique
     private boolean areabreaker$inReach(BlockPos pos) {
-        return player.getEyePos().squaredDistanceTo(Vec3d.ofCenter(pos)) <= 36.0;
+        double reach = AreaBreakerSettings.getMiningReach();
+        return player.getEyePos().squaredDistanceTo(Vec3d.ofCenter(pos)) <= reach * reach;
     }
 
     @Unique
     private boolean areabreaker$hasToolDurability() {
         if (!AreaBreakerSettings.isDurabilityProtectionEnabled()) return true;
         ItemStack tool = player.getMainHandStack();
-        return !tool.isDamageable() || tool.getDamage() < tool.getMaxDamage() - 1;
+        return !tool.isDamageable() || tool.getDamage() < tool.getMaxDamage() - AreaBreakerSettings.getDurabilityReserve();
     }
 
     @Unique
@@ -167,7 +171,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
                 else if (stack.isOf(Items.RAW_COPPER)) stack = new ItemStack(Items.COPPER_INGOT, stack.getCount());
                 entity.setStack(stack);
             }
+            int beforeCount = stack.getCount();
             player.getInventory().insertStack(stack);
+            AreaBreakerSettings.recordItemsCollected(beforeCount - stack.getCount());
             if (stack.isEmpty()) entity.discard();
             else entity.setStack(stack);
         }
