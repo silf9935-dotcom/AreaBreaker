@@ -12,7 +12,6 @@ import org.lwjgl.glfw.GLFW;
 
 public final class AreaBreakerClient implements ClientModInitializer {
     private static KeyBinding menuKey;
-    private static int areaSize = 3;
 
     @Override
     public void onInitializeClient() {
@@ -27,17 +26,15 @@ public final class AreaBreakerClient implements ClientModInitializer {
     }
 
     public static int getAreaSize() {
-        return areaSize;
+        return AreaBreakerSettings.getAreaSize();
     }
 
     static void setAreaSize(int size) {
-        if (size == 1 || size == 2 || size == 3 || size == 4 || size == 5 || size == 10) {
-            areaSize = size;
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null) {
-                String label = size == 1 ? "Выкл (1x1)" : size + "x" + size;
-                client.player.sendMessage(Text.literal("AreaBreaker: " + label), true);
-            }
+        AreaBreakerSettings.setAreaSize(size);
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null) {
+            client.player.sendMessage(Text.literal("AreaBreaker: " +
+                    (size == 1 ? "Выкл (1x1)" : size + "x" + size)), true);
         }
     }
 }
