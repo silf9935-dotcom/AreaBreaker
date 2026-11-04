@@ -1,26 +1,17 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "pattern": [
     " i ",
     "sbc",
     " w "
   ],
   "key": {
-    "i": {
-      "item": "minecraft:iron_ingot"
-    },
-    "s": {
-      "item": "minecraft:stone_pickaxe"
-    },
-    "b": {
-      "item": "minecraft:book"
-    },
-    "c": {
-      "item": "minecraft:copper_pickaxe"
-    },
-    "w": {
-      "item": "minecraft:wooden_pickaxe"
-    }
+    "i": "minecraft:iron_ingot",
+    "s": "minecraft:stone_pickaxe",
+    "b": "minecraft:book",
+    "c": "minecraft:copper_pickaxe",
+    "w": "minecraft:wooden_pickaxe"
   },
   "result": {
     "id": "minecraft:enchanted_book",
