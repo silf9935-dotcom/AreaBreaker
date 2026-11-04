@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ServerPlayerInteractionManager.class)
 public abstract class ServerPlayerInteractionManagerMixin {
     @Shadow @Final protected ServerPlayerEntity player;
-    @Shadow @Final protected ServerWorld world;
+    @Shadow protected ServerWorld world;
 
     @Unique private boolean areabreaker$breakingArea;
 
