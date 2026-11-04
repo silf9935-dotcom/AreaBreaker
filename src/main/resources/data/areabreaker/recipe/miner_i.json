@@ -3,24 +3,19 @@
   "category": "misc",
   "pattern": [
     " i ",
-    "sbc",
-    " w "
+    "lsl",
+    " i "
   ],
   "key": {
-    "i": "minecraft:iron_ingot",
-    "s": "minecraft:stone_pickaxe",
-    "b": "minecraft:book",
-    "c": "minecraft:copper_pickaxe",
-    "w": "minecraft:wooden_pickaxe"
+    "i": { "item": "minecraft:iron_ingot" },
+    "s": { "item": "minecraft:stone" },
+    "l": { "item": "minecraft:lapis_lazuli" }
   },
   "result": {
     "id": "minecraft:enchanted_book",
     "count": 1,
     "components": {
-      "minecraft:custom_name": {
-        "text": "Шахтёр I",
-        "italic": false
-      },
+      "minecraft:custom_name": { "text": "Шахтёр I", "italic": false },
       "minecraft:stored_enchantments": {
         "levels": {
           "minecraft:efficiency": 2,
