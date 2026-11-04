@@ -167,7 +167,7 @@ public final class AreaBreakerSettings {
         boolean ore = path.contains("ore");
         if (ore) { oresMined++; sessionOres++; }
         int baseXp = ore ? 3 : 1;
-        miningXp += baseXp + (baseXp * geologistRank / 10);
+        miningXp += baseXp + (ore ? geologistRank : 0);
         if (blocksMined % 25 == 0) save();
     }
 
