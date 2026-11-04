@@ -104,8 +104,15 @@ public final class AreaBreakerSettings {
 
     public static boolean addFilterBlock(String id) {
         if (id == null || id.isBlank()) return false;
-        boolean added = filterBlocks.add(id);
-        if (added) save();
+        boolean added;
+        if (filterBlocks.contains(id)) {
+            filterBlocks.remove(id);
+            added = false;
+        } else {
+            filterBlocks.add(id);
+            added = true;
+        }
+        save();
         return added;
     }
 
